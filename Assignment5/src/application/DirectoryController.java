@@ -1,24 +1,15 @@
 package application;
 
-
-import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.Optional;
 
 import javax.xml.bind.JAXB;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.UnmarshalException;
-
-import org.xml.sax.SAXParseException;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -82,7 +73,7 @@ public class DirectoryController {
     	txtFldExtension.setDisable(false);
     	btnNavPrev.setDisable(false);
     	btnNavNext.setDisable(false);
-    	btnNavDel.setDisable(false);//idk bout this one
+    	btnNavDel.setDisable(false);
     	btnNavAdd.setDisable(false);
     	btnSerialize.setDisable(false);
     	
@@ -96,16 +87,14 @@ public class DirectoryController {
     		txtFldCompany.setText(mainList.getLst().get(0).getDepartment());
     		txtFldExtension.setText(mainList.getLst().get(0).getExtension());
     		btnNavPrev.setDisable(true);
-    		lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
-    		
-    		for(Employee e : mainList.getLst()) {
-    			System.out.println(e.getName() + ", " + e.getDepartment() + ", " + e.getExtension());
-    		}
+    		lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());	
     	}
     	catch(IOException | RuntimeException exception) {
     		System.err.println("Error opening file");
     		mainList = new EmployeeList();
     		btnNavPrev.setDisable(true);
+    		btnNavNext.setDisable(true);
+    		btnNavDel.setDisable(true);
     		lblCurrRecord.setText("0 of 0");
     	}
     	lblFilename.setText("File: " + selectedFile.getName());
@@ -167,75 +156,63 @@ public class DirectoryController {
     		return 0;
     	}
     	else {
-    		//System.out.println("ello");
     		Employee newEmployee = new Employee(txtFldName.getText(), txtFldCompany.getText(), txtFldExtension.getText());
     		mainList.createNew(newEmployee);
     		txtFldName.clear();
     		txtFldCompany.clear();
     		txtFldExtension.clear();
-    		currRecord++;
-    		lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
-    		for(Employee e : mainList.getLst())
-    			System.out.println(e.getName() + ", " + e.getDepartment() + ", " + e.getExtension());
+    		if(mainList.getLst().size() == 1) {
+    			currRecord = mainList.getLst().size();
+    			lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
+    		
+    			btnNavPrev.setDisable(false);
+    			btnNavNext.setDisable(true);	
+    		}
+    		else {currRecord = mainList.getLst().size()-1;
+    			lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
+    		
+    			btnNavPrev.setDisable(false);
+    			btnNavNext.setDisable(true);
+    		}
+    		
     		return 1;
-//    		mainList.createNew();
-//    		for(Employee e : mainList.getLst()) {
-//    			if(e.getName().equals("") && e.getDepartment().equals("") && e.getExtension().equals("")) {
-//    				e.setName(txtFldName.getText());
-//    				e.setDepartment(txtFldCompany.getText());
-//    				e.setExtension(txtFldExtension.getText());
-//    			}
-//    		}
-    		//for(Employee e : mainList.getLst())
-    			//System.out.println(e.getName() + ", " + e.getDepartment() + ", " + e.getExtension());
     	}
-    	//return 1;
     }
     
     @FXML
-    void removeButtonClicked(ActionEvent event) {//needs work
-    	//Employee prevEmployee = new Employee();
-    	if(currRecord == 0)
+    void removeButtonClicked(ActionEvent event) {
+    	if(mainList.getLst().size() == 1) {
     		btnNavPrev.setDisable(true);
-    	
-		int indPrevEmployee = currRecord;//?
-
-		for (Iterator<Employee> iterator = mainList.getLst().iterator(); iterator.hasNext(); ) {
-		    Employee e = iterator.next();
-		    
-		    if(e.getName().equals(txtFldName.getText()) 
-    				&& e.getDepartment().equals(txtFldCompany.getText())
-    				&& e.getExtension().equals(txtFldExtension.getText())) {
-		    	indPrevEmployee = mainList.getLst().indexOf(e) - 1;
-    			mainList.getLst().remove(e);
-    		}
-		}
-		
-//    	for(Employee e : mainList.getLst()) {
-//    		//ListIterator<Employee> it = mainList.getLst().listIterator();
-//    		
-//    		//if(mainList.getLst().indexOf(e) > 0)
-//    		//	prevEmployee.setName(e.previous());	
-//    		if(e.getName().equals(txtFldName.getText()) 
-//    				&& e.getDepartment().equals(txtFldCompany.getText())
-//    				&& e.getExtension().equals(txtFldExtension.getText())) {
-//    			mainList.getLst().remove(e);
-//    			indPrevEmployee = mainList.getLst().indexOf(e) - 1;
-//    		}
-//    	}
-    	if(currRecord == 1) {
+    		currRecord = 0;
+    		mainList.getLst().remove(0);
     		lblCurrRecord.setText("0" + " of " + mainList.getLst().size());
-    		txtFldName.setText(mainList.getLst().get(0).getName());
-    		txtFldCompany.setText(mainList.getLst().get(0).getDepartment());
-    		txtFldExtension.setText(mainList.getLst().get(0).getExtension());
-    	}
-    	else {
-    		lblCurrRecord.setText(currRecord-1 + " of " + mainList.getLst().size());//currRecord should equal indPrevEmployee
-    		txtFldName.setText(mainList.getLst().get(indPrevEmployee).getName());
-    		txtFldCompany.setText(mainList.getLst().get(indPrevEmployee).getDepartment());
-    		txtFldExtension.setText(mainList.getLst().get(indPrevEmployee).getExtension());
+    		txtFldName.clear();
+    		txtFldCompany.clear();
+    		txtFldExtension.clear();   		
     	}
     	
+    	else{
+    		int indPrevEmployee = currRecord;
+    		int indEmployeeToRemove = -1;
+
+    		for (Iterator<Employee> iterator = mainList.getLst().iterator(); iterator.hasNext(); ) {
+    			Employee e = iterator.next();
+		    
+    			if(e.getName().equals(txtFldName.getText()) 
+    					&& e.getDepartment().equals(txtFldCompany.getText())
+    					&& e.getExtension().equals(txtFldExtension.getText())) {
+    				indEmployeeToRemove = mainList.getLst().indexOf(e);
+    				}
+    			}
+    		
+    		if(indEmployeeToRemove != -1) {
+    			mainList.getLst().remove(indEmployeeToRemove);
+    			lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());//currRecord should equal indPrevEmployee
+    			txtFldName.setText(mainList.getLst().get(indPrevEmployee-1).getName());
+    			txtFldCompany.setText(mainList.getLst().get(indPrevEmployee-1).getDepartment());
+    			txtFldExtension.setText(mainList.getLst().get(indPrevEmployee-1).getExtension());
+    			}
+    		}
     }
     
     @FXML
@@ -247,15 +224,11 @@ public class DirectoryController {
     		btnNavPrev.setDisable(true);
     	
     	
-    	Employee currEmployee = mainList.getLst().get(currRecord-1);// -1 ?
+    	Employee currEmployee = mainList.getLst().get(currRecord);
     	txtFldName.setText(currEmployee.getName());
 		txtFldCompany.setText(currEmployee.getDepartment());
 		txtFldExtension.setText(currEmployee.getExtension());
 		lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
-		
-		System.out.println(currRecord);
-		System.out.println(mainList.getLst().size());
-
     }
     
     @FXML
@@ -272,9 +245,6 @@ public class DirectoryController {
 		txtFldCompany.setText(currEmployee.getDepartment());
 		txtFldExtension.setText(currEmployee.getExtension());
 		lblCurrRecord.setText(currRecord + " of " + mainList.getLst().size());
-		
-		System.out.println(currRecord);
-		System.out.println(mainList.getLst().size());
     }
     
     @FXML
